@@ -95,7 +95,9 @@ function init()
         // updateDemographics(selection);
         updateDemographics(subject);
 
-        initBarChart(subject);
+        let reversed = initSubjectData(subject);
+        // plotBar(reversed, subject);
+        // plotBubble(reversed, subject);
     });
 
 }
@@ -119,10 +121,24 @@ function optionChanged()
     //let id = parseInt(value);
     //console.log(id);
     updateDemographics(id);
+
+    let reversed = initSubjectData(id);
+    // next two lines were working
+    // plotBar(reversed, id);
+    // plotBubble(reversed, id);
+    // prior two lines were working
+
+
+
+    // TO DO:  REFACTOR THIS TO USE RESTYLE INSTEAD OF REDRAWING
+    // console.log(reversed);
+    // Plotly.restyle("bar","x",reversed.map(object => object.sample_value));
+    // Plotly.restyle("bar", "y",reversed.map(object => object.otu_id));
+    // Plotly.restyle("bar","text",reversed.map(object => object.otu_label));
 }
 
 // Function to init the horizontal bar chart
-function initBarChart(subject)
+function initSubjectData(subject)
 {
     let selection = samples.filter(function(sample)
     {
@@ -142,20 +158,37 @@ function initBarChart(subject)
     {
         pts.push({"otu_id":`OTU ${selection[0].otu_ids[i]}`,
                        "sample_value":selection[0].sample_values[i],
-                       "otu_label":selection[0].otu_labels[i] });
+                       "otu_label":selection[0].otu_labels[i],
+                       "color":selection[0].otu_ids[i]*100,
+                       "id":selection[0].otu_ids[i] });
     }
 
     console.log(pts);
+    let bubble = pts;
+    plotBubble(bubble, subject);
 
-    console.log(pts[0].sample_value, pts[1].sample_value);
-    let sortedByOTU = pts.sort((a, b) => b.sample_value - a.sample_value);
-    let sliced = sortedByOTU.slice(0,10);
-    let reversed = sliced.reverse();
+    let reversed = [];
+    if (pts.length < 2)
+    {
+        reversed = pts;
+    }
+    else
+    {
+        console.log(pts[0].sample_value, pts[1].sample_value);
+        let sortedByOTU = pts.sort((a, b) => b.sample_value - a.sample_value);
+        let sliced = sortedByOTU.slice(0,10);
+        reversed = sliced.reverse();
 
-    console.log("sortedByOTU:  ", sortedByOTU);
-    console.log("sliced:  ", sliced);
-    console.log("reversed:  ", reversed);
+        console.log("sortedByOTU:  ", sortedByOTU);
+        console.log("sliced:  ", sliced);
+        console.log("reversed:  ", reversed);
+    }
+    plotBar(reversed, subject);
+    return reversed;
+}
 
+function plotBar(reversed, subject)
+{
     var data = 
     [{
         x: reversed.map(object => object.sample_value),
@@ -173,7 +206,32 @@ function initBarChart(subject)
         width: 800  
     };
 
-    Plotly.newPlot("bar", data, layout);
+    Plotly.newPlot("bar", data, layout); 
+}
+
+function plotBubble(reversed, subject)
+{
+    var trace1 = {
+        x: reversed.map(object => object.id),
+        y: reversed.map(object => object.sample_value),
+        mode: 'markers',
+        text:  reversed.map(object => object.otu_label),
+        marker: {
+          size: reversed.map(object => object.sample_value),
+          color: reversed.map(object => object.color)
+        }
+      };
+      
+      var data = [trace1];
+      
+      var layout = {
+        title: 'Marker Size',
+        showlegend: false,
+        height: 600,
+        width: 1200
+      };
+      
+      Plotly.newPlot('bubble', data, layout);
 }
 
 
