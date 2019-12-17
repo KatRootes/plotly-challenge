@@ -159,7 +159,7 @@ function initSubjectData(subject)
         pts.push({"otu_id":`OTU ${selection[0].otu_ids[i]}`,
                        "sample_value":selection[0].sample_values[i],
                        "otu_label":selection[0].otu_labels[i],
-                       "color":selection[0].otu_ids[i]*100,
+                       "color":`hsl(${selection[0].otu_ids[i]/10},100,40)`,
                        "id":selection[0].otu_ids[i] });
     }
 
@@ -187,6 +187,7 @@ function initSubjectData(subject)
     return reversed;
 }
 
+// Function to plot the bar chart
 function plotBar(reversed, subject)
 {
     var data = 
@@ -209,6 +210,7 @@ function plotBar(reversed, subject)
     Plotly.newPlot("bar", data, layout); 
 }
 
+// Function to plot the bubble chart
 function plotBubble(reversed, subject)
 {
     var trace1 = {
@@ -218,7 +220,8 @@ function plotBubble(reversed, subject)
         text:  reversed.map(object => object.otu_label),
         marker: {
           size: reversed.map(object => object.sample_value),
-          color: reversed.map(object => object.color)
+          color: reversed.map(object => object.color)/*,
+          showscale: true*/
         }
       };
       
