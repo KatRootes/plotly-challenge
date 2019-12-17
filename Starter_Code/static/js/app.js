@@ -2,6 +2,7 @@
 // Create the data url
 const url = "./samples.json";
 
+// Global variables to hold static data
 var names = [];
 var metadata = [];
 var samples = [];
@@ -25,7 +26,7 @@ function unpack(rows, index) {
   }
 
 // Function to populate ids in the dropdown
-function populateTestSubjectDropDown(names)
+function populateTestSubjectDropDown(subjects)
 {
     // Select the dropdown box
     var dropDown = d3.selectAll("#selDataset");
@@ -34,31 +35,27 @@ function populateTestSubjectDropDown(names)
     dropDown.html("");
 
     // Populate the list
-    names.forEach(name => 
+    subjects.forEach(subject => 
     {
         // insert an element
-        let cell = dropDown.append("option").attr("value",name);     
-        cell.text(name);
+        let cell = dropDown.append("option").attr("value",subject);     
+        cell.text(subject);
     });
 }
 
 // Update the Demographics information on screen
-function updateDemographics(name)
+function updateDemographics(subject)
 {
-    demographics = selectDemographics(name);
-    // console.log("demographics:  ", demographics);
+    // Grab the demographics for this subject
+    demographics = selectDemographics(subject);
 
     // Select the element to insert demographics within
     let panelBody = d3.selectAll("#sample-metadata");
-    panelBody.attr("value","Hello World");
 
     // Clear existing metadata
     panelBody.html("");
 
-    // console.log(demographics[0]);
-
     // Populate the demographics
-    //panelBody.append("table").attr("class","table table-striped");
     Object.entries(demographics[0]).forEach(function([key,value])
     {
         panelBody.append("tr");
@@ -72,87 +69,71 @@ function init()
 {
     d3.json(url).then(function(data)
     {
-        console.log("Data: ", data);
-        // console.log("Id: ", data[0].metadata.map(row => row.id));
-        // var id = data[0].metadata.map(row => row.id);
-
+        // Initialize the global data sets
         names = data.names;
         metadata = data.metadata;
         samples = data.samples;
-        // console.log("names: ", data.names);
-        // console.log("metadata: ", data.metadata);
-        console.log("samples: ", data.samples);
 
-        // Grab the first id for initial dashboard
+        // Grab the first id for the startup dashboard
         let subject = data.names[0];
-        console.log("name in init: ", parseInt(subject));
-        console.log("metadata id: ", data.metadata[0].id);
-        // let id = parseInt(name);
 
+        // Populate the drop down
         populateTestSubjectDropDown(data.names);
-        // let selection = data.metadata.filter(name => name.id === id);
-        // console.log("selection: ", selection);
-        // updateDemographics(selection);
+
+        // Populate the demographics
         updateDemographics(subject);
 
-        let reversed = initSubjectData(subject);
-        // plotBar(reversed, subject);
-        // plotBubble(reversed, subject);
+        // Init data and plot
+        initSubjectDataAndPlot(subject);
     });
 
 }
 
-// Function to convert selection to integer and find demographics
+// Function to convert selection to integer and return the demographics
 function selectDemographics(subject)
 {
+    // Grab the id as an integer
     let id = parseInt(subject);
+
+    // Grab the metadata
     let selection = metadata.filter(name => name.id === id);
-    // console.log("selection: ", selection);
+
+    // Return the metadata
     return selection;
 }
-
 
 
 // Function to update the dashboard based on test subject selection
 function optionChanged()
 {
+    // Grab the selected subject
     let id = d3.selectAll("#selDataset").node().value;
-    // console.log("updateDashboard: ", id);
-    //let id = parseInt(value);
-    //console.log(id);
+
+    // Update the demographics table
     updateDemographics(id);
 
-    let reversed = initSubjectData(id);
-    // next two lines were working
-    // plotBar(reversed, id);
-    // plotBubble(reversed, id);
-    // prior two lines were working
-
-
-
-    // TO DO:  REFACTOR THIS TO USE RESTYLE INSTEAD OF REDRAWING
-    // console.log(reversed);
-    // Plotly.restyle("bar","x",reversed.map(object => object.sample_value));
-    // Plotly.restyle("bar", "y",reversed.map(object => object.otu_id));
-    // Plotly.restyle("bar","text",reversed.map(object => object.otu_label));
+    // Prepare data and plot charts
+    initSubjectDataAndPlot(id);
 }
 
-// Function to init the horizontal bar chart
-function initSubjectData(subject)
+// Function to grab the subject data
+function retrieveSubjectData(subject)
 {
+    // Find the subject data
     let selection = samples.filter(function(sample)
     {
-        // console.log(`subject.id: ${sample.id} == subject: ${subject}`);
+        // convert to integer
         let id = parseInt(sample.id);
-        // console.log(subject.id == subject);
+
+        // select matches
         return sample.id == subject;
     });
-    console.log("samples:  ", samples);
-    console.log("subject:  ", subject);
-    console.log("selction:  ", selection);
-    console.log("values:  ", selection[0].sample_values);
-    console.log("labels:  ", selection[0].otu_ids);
+    return selection;
+}
 
+function createListToChart(selection)
+{
+    // Loop through to build points for charting
     let pts = [];
     for (var i=0; i<selection[0].sample_values.length; i++)
     {
@@ -162,34 +143,49 @@ function initSubjectData(subject)
                        "color":`hsl(${selection[0].otu_ids[i]/10},100,40)`,
                        "id":selection[0].otu_ids[i] });
     }
+    return pts;
+}
 
-    console.log(pts);
-    let bubble = pts;
-    plotBubble(bubble, subject);
-
+function selectTopTenAndReverseSort(pts)
+{
+    // Reverse values or plotting on a horizontal bar chart and select the top 10
     let reversed = [];
     if (pts.length < 2)
     {
+        // Only 1 pt, no need to do anything
         reversed = pts;
     }
     else
     {
-        console.log(pts[0].sample_value, pts[1].sample_value);
+        // Sort, pick to 10 and reverse order
         let sortedByOTU = pts.sort((a, b) => b.sample_value - a.sample_value);
         let sliced = sortedByOTU.slice(0,10);
         reversed = sliced.reverse();
-
-        console.log("sortedByOTU:  ", sortedByOTU);
-        console.log("sliced:  ", sliced);
-        console.log("reversed:  ", reversed);
     }
-    plotBar(reversed, subject);
     return reversed;
+}
+
+// Function to init the horizontal bar chart
+function initSubjectDataAndPlot(subject)
+{
+    let selection = retrieveSubjectData(subject);
+    let pts = createListToChart(selection); 
+
+    // Make a copy of the points and plot the bubble chart
+    let bubble = pts;
+    plotBubble(bubble, subject);
+
+    // Prep pts for horizontal bar chart
+    let reversed = selectTopTenAndReverseSort(pts);
+
+    // Plot the bar chart
+    plotBar(reversed, subject);
 }
 
 // Function to plot the bar chart
 function plotBar(reversed, subject)
 {
+    // Create the data list
     var data = 
     [{
         x: reversed.map(object => object.sample_value),
@@ -200,40 +196,51 @@ function plotBar(reversed, subject)
         orientation: "h"
     }];
 
+    // Add the layout
     var layout = 
     {
         title: `Top Ten OTUs for Subject ${subject}`,
         height: 600,
-        width: 800  
+        width: 800,
+        xaxis: {title: "Sample Size"},
+        yaxis: {title: "ID"} 
     };
 
+    // Plot the bar chart
     Plotly.newPlot("bar", data, layout); 
 }
 
 // Function to plot the bubble chart
 function plotBubble(reversed, subject)
 {
-    var trace1 = {
+    // Create the data list
+    var trace1 = 
+    {
         x: reversed.map(object => object.id),
         y: reversed.map(object => object.sample_value),
         mode: 'markers',
         text:  reversed.map(object => object.otu_label),
-        marker: {
+        marker: 
+        {
           size: reversed.map(object => object.sample_value),
-          color: reversed.map(object => object.color)/*,
-          showscale: true*/
+          color: reversed.map(object => object.color)
         }
       };
       
       var data = [trace1];
       
-      var layout = {
-        title: 'Marker Size',
+      // Add the layout
+      var layout = 
+      {
+        title: 'Belly Button Bacteria',
+        xaxis: {title: "OTU ID"},
+        yaxis: {title: "Sample Size"},
         showlegend: false,
         height: 600,
         width: 1200
       };
       
+      // Plot the bubble chart
       Plotly.newPlot('bubble', data, layout);
 }
 
