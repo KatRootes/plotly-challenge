@@ -258,15 +258,16 @@ function plotGauge(washesPerWeek)
             value: washesPerWeek,
             gauge: 
             { 
-                axis: { visible: true, range: [0, 9] },
+                axis: { visible: true, range: [0, 9], showticklabels: false, ticks: "inside" },
+                bar: { color: "lightgray" },
                 steps: 
                 [
-                    {range: [0, 1], color: "#edebe4"},
+                    {range: [0, 1], color: "#edebe4", value:"0-1"},
                     {range: [1, 2], color: "#cde3c5"},
                     {range: [2, 3], color: "#b2d6a5"},
                     {range: [3, 4], color: "#95c484"},
                     {range: [4, 5], color: "#7ab366"},
-                    {range: [5, 6], color: "#5d9648"},
+                    {range: [5, 6], color: "#5d9648", title: "5-6"},
                     {range: [6, 7], color: "#40732e"},
                     {range: [7, 8], color: "#325c23"},
                     {range: [8, 9], color: "#214215"}
