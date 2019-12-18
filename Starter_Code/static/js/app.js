@@ -62,6 +62,11 @@ function updateDemographics(subject)
         panelBody.append("th").text(`${key}:  `);
         panelBody.append("td").text(value);
     });
+
+    // Plot washes per week
+    console.log(demographics);
+    let washesPerWeek = parseInt(demographics[0].wfreq);
+    plotGauge(washesPerWeek);
 }
 
 // Initialize the page
@@ -109,7 +114,7 @@ function optionChanged()
     // Grab the selected subject
     let id = d3.selectAll("#selDataset").node().value;
 
-    // Update the demographics table
+    // Update the demographics table and washes per week
     updateDemographics(id);
 
     // Prepare data and plot charts
@@ -244,6 +249,54 @@ function plotBubble(reversed, subject)
       Plotly.newPlot('bubble', data, layout);
 }
 
+// Function to plot the washes per week
+function plotGauge(washesPerWeek)
+{
+    var data = [
+        {
+            type: "indicator",
+            value: washesPerWeek,
+            gauge: 
+            { 
+                axis: { visible: true, range: [0, 9] },
+                steps: 
+                [
+                    {range: [0, 1], color: "#edebe4"},
+                    {range: [1, 2], color: "#cde3c5"},
+                    {range: [2, 3], color: "#b2d6a5"},
+                    {range: [3, 4], color: "#95c484"},
+                    {range: [4, 5], color: "#7ab366"},
+                    {range: [5, 6], color: "#5d9648"},
+                    {range: [6, 7], color: "#40732e"},
+                    {range: [7, 8], color: "#325c23"},
+                    {range: [8, 9], color: "#214215"}
+                ]
+            },
+            domain: 
+            { 
+                row: 0, 
+                column: 0 
+            }
+        }
+      ];
+      
+      var layout = {
+        width: 600,
+        height: 400,
+        template: {
+          data: {
+            indicator: [
+              {
+                title: { text: "<b>Belly Button Washing Frequency</b><br><span style='font-size:0.8em;color:black'>Scrubs per Week</span>" },
+                mode: "number+gauge"
+              }
+            ]
+          }
+        }
+      };
+      
+      Plotly.newPlot('gauge', data, layout);
+}
 
 /*************************** Handlers *************************************/
 // Call optionChanged when a change takes place
