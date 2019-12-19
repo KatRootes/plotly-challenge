@@ -6,6 +6,9 @@ const url = "./samples.json";
 var names = [];
 var metadata = [];
 var samples = [];
+var age = [];
+var wfreq = [];
+var totalSamples = [];
 
 /***************************** Functions *****************************/
 /**
@@ -18,6 +21,8 @@ var samples = [];
  * index 2 - Metadata.gender    Samples.sample_values
  * index 3 - Metadata.age       Samples.otu_labels
  * index 4 - Metadata.location
+ * index 5 - Metadata.bbtype
+ * index 6 - Metadata.wfreq
  */
 function unpack(rows, index) {
     return rows.map(function(row) {
@@ -43,6 +48,62 @@ function populateTestSubjectDropDown(subjects)
     });
 }
 
+function populateCorrelation()
+{
+    // Grab age and wash frequency
+    age = metadata.map(item => item.age);
+    wfreq = metadata.map(item => item.wfreq === null ? 0 : item.wfreq);
+    totalSamples = samples.map(function(item)
+    {
+        let sum = 0;
+        item.sample_values.forEach(value => sum+= value);
+        return sum;
+    });
+
+    // Plot
+    plotCorrelation(age, wfreq);
+}
+
+// Function to plot the bubble chart
+function plotCorrelation(age, wfreq)
+{
+    console.log(age);
+    console.log(wfreq);
+    console.log(totalSamples);
+
+    // Create the data list
+    var trace1 = 
+    {
+        x: age,
+        y: totalSamples,
+        mode: 'markers',
+        text:  wfreq,
+        marker: 
+        {
+          size: wfreq*100,
+          color: wfreq,
+          showlegend: true
+        }
+      };
+      
+      var data = [trace1];
+      
+      // Add the layout
+      var layout = 
+      {
+        title: 'Correlation',
+        xaxis: {title: "Age"},
+        yaxis: {title: "Samples"},
+        showlegend: false,
+        height: 600,
+        width: 1200
+      };
+      
+      // Plot the bubble chart
+      Plotly.newPlot('correlation', data, layout);
+}
+
+
 // Update the Demographics information on screen
 function updateDemographics(subject)
 {
@@ -67,6 +128,9 @@ function updateDemographics(subject)
     console.log(demographics);
     let washesPerWeek = parseInt(demographics[0].wfreq);
     plotGauge(washesPerWeek);
+
+    // Plot correlation
+    populateCorrelation();
 }
 
 // Initialize the page
@@ -216,19 +280,19 @@ function plotBar(reversed, subject)
 }
 
 // Function to plot the bubble chart
-function plotBubble(reversed, subject)
+function plotBubble(bubble, subject)
 {
     // Create the data list
     var trace1 = 
     {
-        x: reversed.map(object => object.id),
-        y: reversed.map(object => object.sample_value),
+        x: bubble.map(object => object.id),
+        y: bubble.map(object => object.sample_value),
         mode: 'markers',
-        text:  reversed.map(object => object.otu_label),
+        text:  bubble.map(object => object.otu_label),
         marker: 
         {
-          size: reversed.map(object => object.sample_value),
-          color: reversed.map(object => object.color)
+          size: bubble.map(object => object.sample_value),
+          color: bubble.map(object => object.color)
         }
       };
       
