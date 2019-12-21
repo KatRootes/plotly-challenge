@@ -9,6 +9,7 @@ var samples = [];
 var age = [];
 var wfreq = [];
 var totalSamples = [];
+var toolTip = [];
 
 /***************************** Functions *****************************/
 /**
@@ -53,6 +54,7 @@ function populateCorrelation()
     // Grab age and wash frequency
     age = metadata.map(item => item.age);
     wfreq = metadata.map(item => item.wfreq === null ? 0 : item.wfreq);
+    toolTip = metadata.map(item => `Subject = ${item.id}, Age = ${item.age}, Frequency = ${item.wfreq}`);
     totalSamples = samples.map(function(item)
     {
         let sum = 0;
@@ -77,12 +79,11 @@ function plotCorrelation(age, wfreq)
         x: age,
         y: totalSamples,
         mode: 'markers',
-        text:  wfreq,
+        text:  toolTip,
         marker: 
         {
-          size: wfreq*100,
-          color: wfreq,
-          showlegend: true
+          size: 10,
+          color: wfreq
         }
       };
       
@@ -91,10 +92,10 @@ function plotCorrelation(age, wfreq)
       // Add the layout
       var layout = 
       {
-        title: 'Correlation',
+        title: 'Total Samples by Age (Wash Frequency - least (gray) to most (dark red)',
         xaxis: {title: "Age"},
         yaxis: {title: "Samples"},
-        showlegend: false,
+        //showlegend: true,
         height: 600,
         width: 1200
       };
