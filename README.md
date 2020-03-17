@@ -9,3 +9,10 @@ https://katrootes.github.io/plotly-challenge/
 * D3
 * JavaScript
 * DataSet:  [Belly Button Biodiversity dataset](http://robdunnlab.com/projects/belly-button-biodiversity/)
+
+# Screen Shot Example
+Dashboard
+![Dashboard]()
+
+Washing Graph
+![Washing]()
