@@ -12,7 +12,7 @@ https://katrootes.github.io/plotly-challenge/
 
 # Screen Shot Example
 Dashboard
-![Dashboard]()
+![Dashboard](https://github.com/KatRootes/plotly-challenge/blob/master/Capture.PNG)
 
 Washing Graph
-![Washing]()
+![Washing](https://github.com/KatRootes/plotly-challenge/blob/master/Wash.PNG)
